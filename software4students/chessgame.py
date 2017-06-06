@@ -108,7 +108,7 @@ class ChessBoard:
         return_str += "   abcdefgh\n\n"
         y = 8
         for board_row in self.board_matrix:
-            return_str += str(y) + "  " 
+            return_str += str(y) + "  "
             for piece in board_row:
                 if piece == None:
                     return_str += "."
@@ -161,20 +161,110 @@ class ChessBoard:
                         piece.material == Material.King:
                     seen_king = True
         return not seen_king
-    
-    # This function should return, given the current board configuation and
+
+    def piece_in_front(self, x, y):
+        if self.turn == Side.White:
+            check_y = y - 1
+            if self.get_boardpiece((x, check_y)) is not None:
+                return True
+        else:
+            check_y = y + 1
+            if self.get_boardpiece((x, check_y)) is not None:
+                return True
+
+    def enemy_piece_left_front(self, x, y):
+        if self.turn == Side.White:
+            check_x = x - 1
+            check_y = y - 1
+            if self.get_boardpiece((check_x, check_y)).side is White \
+                    or self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            else:
+                return True
+        else:
+            check_x = x - 1
+            check_y = y + 1
+            if self.get_boardpiece((check_x, check_y)).side is Black \
+                    or self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            else:
+                return True
+
+    def enemy_piece_right_front(self, x, y):
+        if self.turn == Side.White:
+            check_x = x + 1
+            check_y = y - 1
+            if self.get_boardpiece((check_x, check_y)).side is White \
+                    or self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            else:
+                return True
+        else:
+            check_x = x + 1
+            check_y = y + 1
+            if self.get_boardpiece((check_x, check_y)).side is Black \
+                    or self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            else:
+                return True
+
+    def out_of_bounds_pawn(self, x, y):
+        if self.turn == Side.White:
+            if y == 0:
+                return True
+        if self.turn == Side.Black:
+            if y == 8:
+                return True
+        else:
+            return False
+
+    def move_pawn(self, x, y):
+        legal_moves = []
+        if self.turn == Side.White:
+            possible_moves = [(x, y - 1), (x - 1, y - 1), (x + 1, y - 1)]
+            if y == 0:
+                return legal_moves
+            if piece_in_front(x, y):
+                possible_moves.remove(0)
+            if enemy_piece_left_front(x, y):
+                possible_moves.remove(1)
+            if enemy_piece_left_front(x, y):
+                possible_moves.remove(2)
+            for coördinate in possible_moves:
+                legal_moves.append(to_notation(coördinate))
+            return legal_moves
+
+        else:
+            possible_moves = [(x, y + 1), (x - 1, y + 1), (x + 1, y + 1)]
+            if y == 8:
+                return legal_moves
+            if piece_in_front(x, y):
+                possible_moves.remove(0)
+            if enemy_piece_left_front(x, y):
+                possible_moves.remove(1)
+            if enemy_piece_left_front(x, y):
+                possible_moves.remove(2)
+            for coördinate in possible_moves:
+                legal_moves.append(to_notation(coördinate))
+            return legal_moves
+
+    # This function should return, given the current board configuration and
     # which players turn it is, all the moves possible for that player
     # It should return these moves as a list of move strings, e.g.
     # [c2c3, d4e5, f4f8]
     # TODO: write an implementation for this function
     def legal_moves(self):
-        pass
+        for x in range(8):
+            for y in range(8):
+                piece = self.get_boardpiece((x, y))
+                print(move_pawn(piece.x, piece.y))
 
     # This function should return, given the move specified (in the format
     # 'd2d3') whether this move is legal
     # TODO: write an implementation for this function, implement it in terms
     # of legal_moves()
     def is_legal_move(self, move):
+
         return True
 
 
@@ -256,15 +346,14 @@ class ChessGame:
             # Print the current score
             score = ChessComputer.evaluate_board(self.chessboard,self.depth)
             print("Current score: " + str(score))
-            
+
             # Calculate the best possible move
             new_score, best_move = self.make_computer_move()
-            
+
             print("Best move: " + best_move)
             print("Score to achieve: " + str(new_score))
             print("")
             self.make_human_move()
-
 
     def make_computer_move(self):
         print("Calculating best move...")
@@ -300,4 +389,4 @@ class ChessGame:
 
 chess_game = ChessGame(Side.White)
 chess_game.main()
-
+chess

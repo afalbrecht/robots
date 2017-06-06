@@ -167,25 +167,29 @@ class ChessBoard:
             check_y = y - 1
             if self.get_boardpiece((x, check_y)) is not None:
                 return True
+            return False
         else:
             check_y = y + 1
             if self.get_boardpiece((x, check_y)) is not None:
                 return True
+            return False
 
     def enemy_piece_left_front(self, x, y):
         if self.turn == Side.White:
             check_x = x - 1
             check_y = y - 1
-            if self.get_boardpiece((check_x, check_y)).side is White \
-                    or self.get_boardpiece((check_x, check_y)) is None:
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
                 return False
             else:
                 return True
         else:
             check_x = x - 1
             check_y = y + 1
-            if self.get_boardpiece((check_x, check_y)).side is Black \
-                    or self.get_boardpiece((check_x, check_y)) is None:
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
                 return False
             else:
                 return True
@@ -194,16 +198,18 @@ class ChessBoard:
         if self.turn == Side.White:
             check_x = x + 1
             check_y = y - 1
-            if self.get_boardpiece((check_x, check_y)).side is White \
-                    or self.get_boardpiece((check_x, check_y)) is None:
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
                 return False
             else:
                 return True
         else:
             check_x = x + 1
             check_y = y + 1
-            if self.get_boardpiece((check_x, check_y)).side is Black \
-                    or self.get_boardpiece((check_x, check_y)) is None:
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
                 return False
             else:
                 return True
@@ -224,29 +230,25 @@ class ChessBoard:
             possible_moves = [(x, y - 1), (x - 1, y - 1), (x + 1, y - 1)]
             if y == 0:
                 return legal_moves
-            if piece_in_front(x, y):
-                possible_moves.remove(0)
-            if enemy_piece_left_front(x, y):
-                possible_moves.remove(1)
-            if enemy_piece_left_front(x, y):
-                possible_moves.remove(2)
-            for coördinate in possible_moves:
-                legal_moves.append(to_notation(coördinate))
-            return legal_moves
+            if not ChessBoard.piece_in_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[0]))
+            if ChessBoard.enemy_piece_left_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[1]))
+            if ChessBoard.enemy_piece_right_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[2]))
 
         else:
             possible_moves = [(x, y + 1), (x - 1, y + 1), (x + 1, y + 1)]
             if y == 8:
                 return legal_moves
-            if piece_in_front(x, y):
-                possible_moves.remove(0)
-            if enemy_piece_left_front(x, y):
-                possible_moves.remove(1)
-            if enemy_piece_left_front(x, y):
-                possible_moves.remove(2)
-            for coördinate in possible_moves:
-                legal_moves.append(to_notation(coördinate))
-            return legal_moves
+            if not ChessBoard.piece_in_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[0]))
+            if ChessBoard.enemy_piece_left_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[1]))
+            if ChessBoard.enemy_piece_right_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[2]))
+        print(legal_moves)
+        return legal_moves
 
     # This function should return, given the current board configuration and
 
@@ -264,7 +266,6 @@ class ChessBoard:
                         self.get_boardpiece((change_x, change_y)).side is self.turn:
                     continue
                 moves.append(to_move((x,y),(change_x,change_y)))
-        print(moves)
         return moves
 
     def move_rook(self,x,y):
@@ -287,7 +288,6 @@ class ChessBoard:
                         self.get_boardpiece((change_x, change_y)).side is self.turn:
                     continue
                 moves.append(to_move((x,y),(change_x,change_y)))
-        print(moves)
         return moves
 
     # This function should return, given the current board configuration and
@@ -310,19 +310,13 @@ class ChessBoard:
 
         return movelist
 
-
-        for x in range(8):
-            for y in range(8):
-                piece = self.get_boardpiece((x, y))
-                print(move_pawn(piece.x, piece.y))
-
     # This function should return, given the move specified (in the format
     # 'd2d3') whether this move is legal
     # TODO: write an implementation for this function, implement it in terms
     # of legal_moves()
     def is_legal_move(self, move):
         x, y = to_coordinate(move[0:2])
-        if move in self.move_king(x,y):
+        if move in self.move_pawn(x,y):
             return True
         return False
 

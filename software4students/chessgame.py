@@ -108,7 +108,7 @@ class ChessBoard:
         return_str += "   abcdefgh\n\n"
         y = 8
         for board_row in self.board_matrix:
-            return_str += str(y) + "  "
+            return_str += str(y) + "  " 
             for piece in board_row:
                 if piece == None:
                     return_str += "."
@@ -288,6 +288,28 @@ class ChessBoard:
                         self.get_boardpiece((change_x, change_y)).side is self.turn:
                     continue
                 moves.append(to_move((x,y),(change_x,change_y)))
+        x_moves = [i for i in range(8)]
+        for x_c in x_moves:
+            if self.get_boardpiece((x_c, y)) is not None:
+                if x_c < x:
+                    del x_moves[:x_c]
+                if x_c > x:
+                    del x_moves[x_c + 1:]
+                if self.get_boardpiece((x_c, y)).side == self.turn:
+                   x_moves.remove(x_c)
+        for x_c in x_moves:
+            moves.append(to_move((x, y), (x_c,y)))
+        y_moves = [i for i in range(8)]
+        for y_c in y_moves:
+            if self.get_boardpiece((x, y_c)) is not None:
+                if y_c < y:
+                    del y_moves[:y_c]
+                if y_c > y:
+                    del y_moves[y_c + 1:]
+                if self.get_boardpiece((x, y_c)).side == self.turn:
+                    y_moves.remove(y_c)
+        for y_c in y_moves:
+            moves.append(to_move((x, y), (x, y_c)))
         return moves
 
     # This function should return, given the current board configuration and
@@ -300,14 +322,14 @@ class ChessBoard:
         for x in range(8):
             for y in range(8):
                 piece = self.get_boardpiece((x,y))
-                if piece == None:
+                if piece == None or piece.side is not self.turn:
                     continue
                 if piece.material == Material.Pawn:
                     movelist += move_pawn(x,y)
-                if piec.material == Material.King:
+                if piece.material == Material.King:
                     movelist += move_king(x,y)
-
-
+                if piece.material == Material.Rook:
+                    movelist += move_king(x,y)
         return movelist
 
     # This function should return, given the move specified (in the format
@@ -316,7 +338,7 @@ class ChessBoard:
     # of legal_moves()
     def is_legal_move(self, move):
         x, y = to_coordinate(move[0:2])
-        if move in self.move_pawn(x,y):
+        if move in self.move_rook(x,y):
             return True
         return False
 

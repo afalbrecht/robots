@@ -217,12 +217,12 @@ class ChessBoard:
                 piece = self.get_boardpiece((x,y))
                 if piece == None or piece.side is not self.turn:
                     continue
-                if piece.material == Material.Pawn:
-                    movelist += move_pawn(x,y)
+                #if piece.material == Material.Pawn:
+                #    movelist += move_pawn(x,y)
                 if piece.material == Material.King:
-                    movelist += move_king(x,y)
+                    movelist += self.move_king(x,y)
                 if piece.material == Material.Rook:
-                    movelist += move_king(x,y)
+                    movelist += self.move_rook(x,y)
         return movelist
 
 
@@ -232,8 +232,7 @@ class ChessBoard:
     # TODO: write an implementation for this function, implement it in terms
     # of legal_moves()
     def is_legal_move(self, move):
-        x, y = to_coordinate(move[0:2])
-        if move in self.move_rook(x,y):
+        if move in self.legal_moves():
             return True
         return False
 

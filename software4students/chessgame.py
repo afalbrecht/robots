@@ -161,21 +161,78 @@ class ChessBoard:
                         piece.material == Material.King:
                     seen_king = True
         return not seen_king
-    
-    # This function should return, given the current board configuation and
+
+    def move_king(self,x,y):
+        moves = []
+        for x_c in range(-1, 2):
+            change_x = x + x_c
+            if change_x < 0 or change_x > 7:
+                continue
+            for y_c in range(-1, 2):
+                change_y = y + y_c
+                if change_y < 0 or change_y > 7:
+                    continue
+                if self.get_boardpiece((change_x,change_y)) is not None and \
+                        self.get_boardpiece((change_x, change_y)).side is self.turn:
+                    continue
+                moves.append(to_move((x,y),(change_x,change_y)))
+        print(moves)
+        return moves
+
+    def move_rook(self,x,y):
+        moves = []
+        for x_c in range(8):
+            if self.get_boardpiece((change_x, change_y)) is not None and \
+                            self.get_boardpiece((change_x, change_y)).side is self.turn:
+                continue
+
+
+
+            change_x = x + x_c
+            if change_x < 0 or change_x > 7:
+                continue
+            for y_c in range(-1, 2):
+                change_y = y + y_c
+                if change_y < 0 or change_y > 7:
+                    continue
+                if self.get_boardpiece((change_x,change_y)) is not None and \
+                        self.get_boardpiece((change_x, change_y)).side is self.turn:
+                    continue
+                moves.append(to_move((x,y),(change_x,change_y)))
+        print(moves)
+        return moves
+
+    # This function should return, given the current board configuration and
     # which players turn it is, all the moves possible for that player
     # It should return these moves as a list of move strings, e.g.
     # [c2c3, d4e5, f4f8]
     # TODO: write an implementation for this function
     def legal_moves(self):
-        pass
+        movelist = []
+        for x in range(8):
+            for y in range(8):
+                piece = self.get_boardpiece((x,y))
+                if piece == None:
+                    continue
+                if piece.material == Material.Pawn:
+                    movelist += move_pawn(x,y)
+                if piec.material == Material.King:
+                    movelist += move_king(x,y)
+
+
+        return movelist
+
+
 
     # This function should return, given the move specified (in the format
     # 'd2d3') whether this move is legal
     # TODO: write an implementation for this function, implement it in terms
     # of legal_moves()
     def is_legal_move(self, move):
-        return True
+        x, y = to_coordinate(move[0:2])
+        if move in self.move_king(x,y):
+            return True
+        return False
 
 
 # This static class is responsible for providing functions that can calculate

@@ -162,6 +162,96 @@ class ChessBoard:
                     seen_king = True
         return not seen_king
 
+    def piece_in_front(self, x, y):
+        if self.turn == Side.White:
+            check_y = y - 1
+            if self.get_boardpiece((x, check_y)) is not None:
+                return True
+            return False
+        else:
+            check_y = y + 1
+            if self.get_boardpiece((x, check_y)) is not None:
+                return True
+            return False
+
+    def enemy_piece_left_front(self, x, y):
+        if self.turn == Side.White:
+            check_x = x - 1
+            check_y = y - 1
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
+                return False
+            else:
+                return True
+        else:
+            check_x = x - 1
+            check_y = y + 1
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
+                return False
+            else:
+                return True
+
+    def enemy_piece_right_front(self, x, y):
+        if self.turn == Side.White:
+            check_x = x + 1
+            check_y = y - 1
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
+                return False
+            else:
+                return True
+        else:
+            check_x = x + 1
+            check_y = y + 1
+            if self.get_boardpiece((check_x, check_y)) is None:
+                return False
+            if self.get_boardpiece((check_x, check_y)).side is self.turn:
+                return False
+            else:
+                return True
+
+    def out_of_bounds_pawn(self, x, y):
+        if self.turn == Side.White:
+            if y == 0:
+                return True
+        if self.turn == Side.Black:
+            if y == 8:
+                return True
+        else:
+            return False
+
+    def move_pawn(self, x, y):
+        legal_moves = []
+        if self.turn == Side.White:
+            possible_moves = [(x, y - 1), (x - 1, y - 1), (x + 1, y - 1)]
+            if y == 0:
+                return legal_moves
+            if not ChessBoard.piece_in_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[0]))
+            if ChessBoard.enemy_piece_left_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[1]))
+            if ChessBoard.enemy_piece_right_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[2]))
+
+        else:
+            possible_moves = [(x, y + 1), (x - 1, y + 1), (x + 1, y + 1)]
+            if y == 8:
+                return legal_moves
+            if not ChessBoard.piece_in_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[0]))
+            if ChessBoard.enemy_piece_left_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[1]))
+            if ChessBoard.enemy_piece_right_front(self, x, y):
+                legal_moves.append(to_move((x,y),possible_moves[2]))
+        print(legal_moves)
+        return legal_moves
+
+    # This function should return, given the current board configuration and
+
     def move_king(self,x,y):
         moves = []
         for x_c in range(-1, 2):
@@ -176,11 +266,28 @@ class ChessBoard:
                         self.get_boardpiece((change_x, change_y)).side is self.turn:
                     continue
                 moves.append(to_move((x,y),(change_x,change_y)))
-        print(moves)
         return moves
 
     def move_rook(self,x,y):
         moves = []
+        for x_c in range(8):
+            if self.get_boardpiece((change_x, change_y)) is not None and \
+                            self.get_boardpiece((change_x, change_y)).side is self.turn:
+                continue
+
+
+
+            change_x = x + x_c
+            if change_x < 0 or change_x > 7:
+                continue
+            for y_c in range(-1, 2):
+                change_y = y + y_c
+                if change_y < 0 or change_y > 7:
+                    continue
+                if self.get_boardpiece((change_x,change_y)) is not None and \
+                        self.get_boardpiece((change_x, change_y)).side is self.turn:
+                    continue
+                moves.append(to_move((x,y),(change_x,change_y)))
         x_moves = [i for i in range(8)]
         for x_c in x_moves:
             if self.get_boardpiece((x_c, y)) is not None:
@@ -224,8 +331,6 @@ class ChessBoard:
                 if piece.material == Material.Rook:
                     movelist += self.move_rook(x,y)
         return movelist
-
-
 
     # This function should return, given the move specified (in the format
     # 'd2d3') whether this move is legal

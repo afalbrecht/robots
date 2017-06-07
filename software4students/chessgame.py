@@ -271,7 +271,7 @@ class ChessBoard:
     def move_rook(self,x,y):
         moves = []
         x_moves = [i for i in range(8)]
-        delx= []
+        delx = []
         for x_c in x_moves:
             if self.get_boardpiece((x_c, y)) is not None:
                 if x_c < x:
@@ -333,6 +333,27 @@ class ChessBoard:
 # the optimal move using minimax
 class ChessComputer:
 
+    # Calculates the score of a given board configuration based on the
+    # material left on the board. Returns a score number, in which positive
+    # means white is better off, while negative means black is better of
+    @staticmethod
+    def evaluate_board(chessboard, depth_left):
+        score = 0
+        score_dict = {Material.Pawn: 10, Material.Rook: 50, Material.King: 1000}
+        for x in range(8):
+            for y in range(8):
+                piece = chessboard.get_boardpiece((x,y))
+                if piece is not None:
+                    if piece.side is Side.White:
+                        score += score_dict[piece.material]
+                    else:
+                        score -= score_dict[piece.material]
+        if chessboard.turn is Side.White:
+            score = score + depth_left
+        else:
+            score = score - depth_left
+        return score
+
     # This method uses either alphabeta or minimax to calculate the best move
     # possible. The input needed is a chessboard configuration and the max
     # depth of the search algorithm. It returns a tuple of (score, chessboard)
@@ -355,9 +376,32 @@ class ChessComputer:
     # of a specific board configuration after the max depth is reached
     # TODO: write an implementation for this function
     @staticmethod
-    def minimax(chessboard, depth):
+    def minimax(chessboard, depth, path=[]):
+        score = ChessComputer.evaluate_board(newboard, depth)
+        if depth == 0:
+            return (score, path)
+        movelist = ChessBoard.legal_moves(chessboard)
+        if chessboard.turn is Side.White: #max
+            best_value = -math.inf
+            for move in movelist:
+                new_board = chessboard.make_move(move)
+                path.append(move)
+                value, path = ChessComputer.minimax(new_board, depth - 1, path=path)
+                if value > best_value:
+                    best_value = value
+                    best_path = deepcopy(path)
+            return (best_value, best_path[0])
 
-        return (0, "no implementation written")
+        else: #min
+            best_value = math.inf
+            for move in movelist:
+                new_board = chessboard.make_move(move)
+                path.append(move)
+                value, path = ChessComputer.minimax(new_board, depth - 1, path=path)
+                if value < best_value:
+                    best_value = value
+                    best_path = deepcopy(path)
+            return (best_value, best_path[0])
 
     # This function uses alphabeta to calculate the next move. Given the
     # chessboard and max depth, this function should return a tuple of the
@@ -369,24 +413,6 @@ class ChessComputer:
     def alphabeta(chessboard, depth, alpha, beta):
         return (0, "no implementation written")
 
-    # Calculates the score of a given board configuration based on the 
-    # material left on the board. Returns a score number, in which positive
-    # means white is better off, while negative means black is better of
-    @staticmethod
-    def evaluate_board(chessboard, depth_left):
-        score = 0
-        score_dict = {Material.Pawn: 1, Material.Rook: 5, Material.King: 100}
-        for x in range(8):
-            for y in range(8):
-                piece = chessboard.get_boardpiece((x,y))
-                if piece is not None:
-                    if piece.side is Side.White:
-                        score += score_dict[piece.material]
-                    else:
-                        score -= score_dict[piece.material]
-        if depth_left is not 0:
-            score = score * depth_left
-        return score
 
 # This class is responsible for starting the chess game, playing and user 
 # feedback
@@ -420,7 +446,6 @@ class ChessGame:
             # Print the current score
             score = ChessComputer.evaluate_board(self.chessboard,self.depth)
             print("Current score: " + str(score))
-            print("Depth: " + str(self.depth))
             
             # Calculate the best possible move
             new_score, best_move = self.make_computer_move()

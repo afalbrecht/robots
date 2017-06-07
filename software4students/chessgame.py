@@ -239,7 +239,7 @@ class ChessBoard:
 
         else:
             possible_moves = [(x, y + 1), (x - 1, y + 1), (x + 1, y + 1)]
-            if y == 8:
+            if y == 7:
                 return legal_moves
             if not ChessBoard.piece_in_front(self, x, y):
                 legal_moves.append(to_move((x,y),possible_moves[0]))
@@ -247,7 +247,6 @@ class ChessBoard:
                 legal_moves.append(to_move((x,y),possible_moves[1]))
             if ChessBoard.enemy_piece_right_front(self, x, y):
                 legal_moves.append(to_move((x,y),possible_moves[2]))
-        print(legal_moves)
         return legal_moves
 
     # This function should return, given the current board configuration and
@@ -270,46 +269,33 @@ class ChessBoard:
 
     def move_rook(self,x,y):
         moves = []
-        for x_c in range(8):
-            if self.get_boardpiece((change_x, change_y)) is not None and \
-                            self.get_boardpiece((change_x, change_y)).side is self.turn:
-                continue
-
-
-
-            change_x = x + x_c
-            if change_x < 0 or change_x > 7:
-                continue
-            for y_c in range(-1, 2):
-                change_y = y + y_c
-                if change_y < 0 or change_y > 7:
-                    continue
-                if self.get_boardpiece((change_x,change_y)) is not None and \
-                        self.get_boardpiece((change_x, change_y)).side is self.turn:
-                    continue
-                moves.append(to_move((x,y),(change_x,change_y)))
         x_moves = [i for i in range(8)]
+        delx= []
         for x_c in x_moves:
             if self.get_boardpiece((x_c, y)) is not None:
                 if x_c < x:
-                    del x_moves[:x_c]
+                    delx += x_moves[:x_c]
                 if x_c > x:
-                    del x_moves[x_c + 1:]
+                    delx += x_moves[x_c + 1:]
                 if self.get_boardpiece((x_c, y)).side == self.turn:
-                   x_moves.remove(x_c)
-        for x_c in x_moves:
-            moves.append(to_move((x, y), (x_c,y)))
+                    delx.append(x_moves[x_c])
+        for x_i in x_moves:
+            if x_i not in delx:
+                moves.append(to_move((x, y), (x_i, y)))
         y_moves = [i for i in range(8)]
+        dely = []
         for y_c in y_moves:
             if self.get_boardpiece((x, y_c)) is not None:
                 if y_c < y:
-                    del y_moves[:y_c]
+                    dely += y_moves[:y_c]
                 if y_c > y:
-                    del y_moves[y_c + 1:]
+                    dely += y_moves[y_c+1:]
                 if self.get_boardpiece((x, y_c)).side == self.turn:
-                    y_moves.remove(y_c)
-        for y_c in y_moves:
-            moves.append(to_move((x, y), (x, y_c)))
+                    dely.append(y_moves[y_c])
+        for y_i in y_moves:
+            if y_i not in dely:
+                moves.append(to_move((x, y), (x, y_i)))
+        print(moves)
         return moves
 
     # This function should return, given the current board configuration and
@@ -324,8 +310,8 @@ class ChessBoard:
                 piece = self.get_boardpiece((x,y))
                 if piece == None or piece.side is not self.turn:
                     continue
-                #if piece.material == Material.Pawn:
-                #    movelist += move_pawn(x,y)
+                if piece.material == Material.Pawn:
+                    movelist += self.move_pawn(x,y)
                 if piece.material == Material.King:
                     movelist += self.move_king(x,y)
                 if piece.material == Material.Rook:

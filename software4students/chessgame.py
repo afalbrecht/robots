@@ -1,5 +1,6 @@
 from __future__ import print_function
 from copy import deepcopy
+import math
 import sys
 
 ## Helper functions
@@ -355,6 +356,7 @@ class ChessComputer:
     # TODO: write an implementation for this function
     @staticmethod
     def minimax(chessboard, depth):
+
         return (0, "no implementation written")
 
     # This function uses alphabeta to calculate the next move. Given the
@@ -372,7 +374,19 @@ class ChessComputer:
     # means white is better off, while negative means black is better of
     @staticmethod
     def evaluate_board(chessboard, depth_left):
-        return 0
+        score = 0
+        score_dict = {Material.Pawn: 1, Material.Rook: 5, Material.King: 100}
+        for x in range(8):
+            for y in range(8):
+                piece = chessboard.get_boardpiece((x,y))
+                if piece is not None:
+                    if piece.side is Side.White:
+                        score += score_dict[piece.material]
+                    else:
+                        score -= score_dict[piece.material]
+        if depth_left is not 0:
+            score = score * depth_left
+        return score
 
 # This class is responsible for starting the chess game, playing and user 
 # feedback
@@ -406,6 +420,7 @@ class ChessGame:
             # Print the current score
             score = ChessComputer.evaluate_board(self.chessboard,self.depth)
             print("Current score: " + str(score))
+            print("Depth: " + str(self.depth))
             
             # Calculate the best possible move
             new_score, best_move = self.make_computer_move()

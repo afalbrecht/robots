@@ -152,14 +152,17 @@ class ChessBoard:
 
         return new_board
 
+    # Added clause for checkmate
     def is_king_dead(self, side):
         seen_king = False
         for x in range(8):
             for y in range(8):
                 piece = self.get_boardpiece((x,y))
-                if piece != None and piece.side == side and \
-                        piece.material == Material.King:
+                if piece != None and piece.side == side and piece.material == Material.King:
                     seen_king = True
+                    if  to_notation((x,y)) in self.legal_movescheck(side, kingbool=True) and \
+                        self.move_king(x,y) == []:
+                        seen_king = False
         return not seen_king
 
     # Part of pawn implementation
@@ -253,8 +256,7 @@ class ChessBoard:
                 legal_moves.append(to_move((x,y),possible_moves[2]))
         return legal_moves
 
-    # This function should return, given the current board configuration and
-
+    # Movecheck function to check possible moves for the other side
     def legal_movescheck(self, side, kingbool=False):
         movelist = []
         output = []
@@ -279,6 +281,8 @@ class ChessBoard:
             output.append(move[2:4])
         return output
 
+    # Checks if surrounding moves do not end in a check
+    # Kincheck variable to stop recursion
     def move_king(self,x,y, kingcheck=True):
         moves = []
         for x_c in range(-1, 2):
@@ -298,6 +302,7 @@ class ChessBoard:
         return moves
 
     def move_rook(self,x,y):
+        side = self.get_boardpiece((x,y)).side
         moves = []
         x_moves = [i for i in range(8)]
         delx = []
@@ -307,8 +312,8 @@ class ChessBoard:
                     delx += x_moves[:x_c]
                 if x_c > x:
                     delx += x_moves[x_c + 1:]
-                if self.get_boardpiece((x_c, y)).side == self.turn:
-                    delx.append(x_moves[x_c])
+                if self.get_boardpiece((x_c, y)).side == side:
+                    delx.append(x_c)
         for x_i in x_moves:
             if x_i not in delx:
                 moves.append(to_move((x, y), (x_i, y)))
@@ -320,14 +325,15 @@ class ChessBoard:
                     dely += y_moves[:y_c]
                 if y_c > y:
                     dely += y_moves[y_c+1:]
-                if self.get_boardpiece((x, y_c)).side == self.turn:
-                    dely.append(y_moves[y_c])
+                if self.get_boardpiece((x, y_c)).side == side:
+                    dely.append(y_c)
         for y_i in y_moves:
             if y_i not in dely:
                 moves.append(to_move((x, y), (x, y_i)))
         return moves
 
     def move_bishop(self,x,y):
+        side = self.get_boardpiece((x, y)).side
         moves = []
         x1 = x + 1
         y1 = y + 1
@@ -336,7 +342,7 @@ class ChessBoard:
                 moves.append(to_move((x, y), (x1, y1)))
                 x1 += 1
                 y1 += 1
-            elif self.get_boardpiece((x1, y1)).side != self.turn:
+            elif self.get_boardpiece((x1, y1)).side != side:
                 moves.append(to_move((x, y), (x1, y1)))
                 break
             else:
@@ -348,7 +354,7 @@ class ChessBoard:
                 moves.append(to_move((x, y), (x1, y1)))
                 x1 += 1
                 y1 -= 1
-            elif self.get_boardpiece((x1, y1)).side != self.turn:
+            elif self.get_boardpiece((x1, y1)).side != side:
                 moves.append(to_move((x, y), (x1, y1)))
                 break
             else:
@@ -360,7 +366,7 @@ class ChessBoard:
                 moves.append(to_move((x, y), (x1, y1)))
                 x1 -= 1
                 y1 += 1
-            elif self.get_boardpiece((x1, y1)).side != self.turn:
+            elif self.get_boardpiece((x1, y1)).side != side:
                 moves.append(to_move((x, y), (x1, y1)))
                 break
             else:
@@ -372,7 +378,7 @@ class ChessBoard:
                 moves.append(to_move((x, y), (x1, y1)))
                 x1 -= 1
                 y1 -= 1
-            elif self.get_boardpiece((x1, y1)).side != self.turn:
+            elif self.get_boardpiece((x1, y1)).side != side:
                 moves.append(to_move((x, y), (x1, y1)))
                 break
             else:
@@ -386,6 +392,7 @@ class ChessBoard:
         return output
 
     def move_knight(self, x, y):
+        side = self.get_boardpiece((x, y)).side
         intermediate_list = []
         moves = []
         cor_list = [-2, -1, 1, 2]
@@ -400,7 +407,7 @@ class ChessBoard:
                         if self.get_boardpiece(newpos) is None:
                             intermediate_list.append(newpos)
                         else:
-                            if self.get_boardpiece(newpos).side is not self.turn:
+                            if self.get_boardpiece(newpos).side is not side:
                                 intermediate_list.append(newpos)
         for coord in intermediate_list:
             moves.append(to_move((x, y), coord))
@@ -448,7 +455,8 @@ class ChessComputer:
 
     # Calculates the score of a given board configuration based on the
     # material left on the board. Returns a score number, in which positive
-    # means white is better off, while negative means black is better of
+    # means white is better off, while negative means black is better off
+    # Adds a 1100 penalty when a side can't make any moves
     @staticmethod
     def evaluate_board(chessboard, depth_left):
         score = 0
@@ -460,16 +468,16 @@ class ChessComputer:
                 if piece is not None:
                     if piece.side is Side.White:
                         score += score_dict[piece.material]
-                        if piece.material is Material.King and chessboard.legal_movescheck(Side.Black, kingbool=True) is []:
-                            score += 1100
                     else:
                         score -= score_dict[piece.material]
-                        if piece.material is Material.King and chessboard.legal_movescheck(Side.White, kingbool=True) is []:
-                            score -= 1100
         if chessboard.turn is Side.White:
             score = score + depth_left
+            if chessboard.legal_movescheck(Side.Black, kingbool=True) is []:
+                score += 1100
         else:
             score = score - depth_left
+            if chessboard.legal_movescheck(Side.White, kingbool=True) is []:
+                score -= 1100
         return score
 
     # This method uses either alphabeta or minimax to calculate the best move
@@ -495,10 +503,10 @@ class ChessComputer:
     # TODO: write an implementation for this function
     @staticmethod
     def min_value(chessboard, depth):
-        if depth == 0 or chessboard.is_king_dead(0) or chessboard.is_king_dead(1):
+        move_list = ChessBoard.legal_moves(chessboard)
+        if depth == 0 or chessboard.is_king_dead(0) or chessboard.is_king_dead(1) or move_list == []:
             return ChessComputer.evaluate_board(chessboard, depth)
         best_value = 9999999
-        move_list = ChessBoard.legal_moves(chessboard)
         for move in move_list:
             new_board = chessboard.make_move(move)
             value = ChessComputer.max_value(new_board, depth - 1)
@@ -507,9 +515,9 @@ class ChessComputer:
 
     @staticmethod
     def max_value(chessboard, depth):
-        if depth == 0 or chessboard.is_king_dead(0) or chessboard.is_king_dead(1):
-            return ChessComputer.evaluate_board(chessboard, depth)
         move_list = ChessBoard.legal_moves(chessboard)
+        if depth == 0 or chessboard.is_king_dead(0) or chessboard.is_king_dead(1) or move_list == []:
+            return ChessComputer.evaluate_board(chessboard, depth)
         best_value = -99999999
         for move in move_list:
             new_board = chessboard.make_move(move)
@@ -538,8 +546,7 @@ class ChessComputer:
             for move in movelist:
                 new_board = chessboard.make_move(move)
                 value = ChessComputer.max_value(new_board, depth - 1)
-                print(value)
-                if value < best_value:
+                if  value < best_value:
                     best_value = value
                     best_move = move
             return (best_value, best_move)
@@ -577,9 +584,9 @@ class ChessComputer:
 
     @staticmethod
     def max_value_ab(chessboard, alpha, beta, depth):
-        if chessboard.is_king_dead(0) or chessboard.is_king_dead(1) or depth == 0:
+        move_list = ChessBoard.legal_moves(chessboard)
+        if depth == 0 or chessboard.is_king_dead(0) or chessboard.is_king_dead(1) or move_list == []:
             return ChessComputer.evaluate_board(chessboard, depth)
-        moves = chessboard.legal_moves()
         value = -99999999
         for move in moves:
             new_board = chessboard.make_move(move)
@@ -591,9 +598,9 @@ class ChessComputer:
 
     @staticmethod
     def min_value_ab(chessboard, alpha, beta, depth):
-        if chessboard.is_king_dead(0) or chessboard.is_king_dead(1) or depth == 0:
+        move_list = ChessBoard.legal_moves(chessboard)
+        if depth == 0 or chessboard.is_king_dead(0) or chessboard.is_king_dead(1) or move_list == []:
             return ChessComputer.evaluate_board(chessboard, depth)
-        moves = chessboard.legal_moves()
         value = 99999999
         for move in moves:
             new_board = chessboard.make_move(move)
@@ -651,7 +658,7 @@ class ChessGame:
     def make_computer_move(self):
         print("Calculating best move...")
         return ChessComputer.computer_move(self.chessboard,
-                self.depth, alphabeta=True)
+                self.depth, alphabeta=False)
         
 
     def make_human_move(self):

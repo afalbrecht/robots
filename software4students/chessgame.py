@@ -162,6 +162,7 @@ class ChessBoard:
                     seen_king = True
         return not seen_king
 
+    # Part of pawn implementation
     def piece_in_front(self, x, y):
         if self.turn == Side.White:
             check_y = y - 1
@@ -174,6 +175,7 @@ class ChessBoard:
                 return True
             return False
 
+    # Part of pawn implementation
     def enemy_piece_left_front(self, x, y):
         if self.turn == Side.White:
             check_x = x - 1
@@ -194,6 +196,7 @@ class ChessBoard:
             else:
                 return True
 
+    # Part of pawn implementation
     def enemy_piece_right_front(self, x, y):
         if self.turn == Side.White:
             check_x = x + 1
@@ -214,6 +217,7 @@ class ChessBoard:
             else:
                 return True
 
+    # Part of pawn implementation
     def out_of_bounds_pawn(self, x, y):
         if self.turn == Side.White:
             if y == 0:
@@ -251,25 +255,25 @@ class ChessBoard:
 
     # This function should return, given the current board configuration and
 
-    def legal_king(self):
+    def legal_movescheck(self, side, kingbool=False):
         movelist = []
         output = []
         for x in range(8):
             for y in range(8):
                 piece = self.get_boardpiece((x,y))
-                if piece == None or piece.side is self.turn:
+                if piece == None or piece.side is side:
                     continue
-                if piece.material == Material.Pawn:
+                elif piece.material == Material.Pawn:
                     movelist += self.move_pawn(x,y)
-                if piece.material == Material.King:
-                    movelist += self.move_king(x,y, kingcheck=False)
-                if piece.material == Material.Rook:
+                elif piece.material == Material.King:
+                    movelist += self.move_king(x,y, kingcheck=kingbool)
+                elif piece.material == Material.Rook:
                     movelist += self.move_rook(x,y)
-                if piece.material == Material.Bishop:
+                elif piece.material == Material.Bishop:
                     movelist += self.move_bishop(x,y)
-                if piece.material == Material.Queen:
+                elif piece.material == Material.Queen:
                     movelist += self.move_queen(x,y)
-                if piece.material == Material.Knight:
+                elif piece.material == Material.Knight:
                     movelist += self.move_knight(x,y)
         for move in movelist:
             output.append(move[2:4])
@@ -288,7 +292,7 @@ class ChessBoard:
                 if self.get_boardpiece((change_x,change_y)) is not None and \
                         self.get_boardpiece((change_x, change_y)).side is self.turn:
                     continue
-                if kingcheck and to_notation((change_x,change_y)) in self.legal_king():
+                if kingcheck and to_notation((change_x,change_y)) in self.legal_movescheck(self.turn, kingbool=False):
                     continue
                 moves.append(to_move((x,y),(change_x,change_y)))
         return moves
@@ -414,17 +418,17 @@ class ChessBoard:
                 piece = self.get_boardpiece((x,y))
                 if piece == None or piece.side is not self.turn:
                     continue
-                if piece.material == Material.Pawn:
+                elif piece.material == Material.Pawn:
                     movelist += self.move_pawn(x,y)
-                if piece.material == Material.King:
+                elif piece.material == Material.King:
                     movelist += self.move_king(x,y)
-                if piece.material == Material.Rook:
+                elif piece.material == Material.Rook:
                     movelist += self.move_rook(x,y)
-                if piece.material == Material.Bishop:
+                elif piece.material == Material.Bishop:
                     movelist += self.move_bishop(x,y)
-                if piece.material == Material.Queen:
+                elif piece.material == Material.Queen:
                     movelist += self.move_queen(x,y)
-                if piece.material == Material.Knight:
+                elif piece.material == Material.Knight:
                     movelist += self.move_knight(x,y)
         return movelist
 
@@ -456,8 +460,12 @@ class ChessComputer:
                 if piece is not None:
                     if piece.side is Side.White:
                         score += score_dict[piece.material]
+                        if piece.material is Material.King and chessboard.legal_movescheck(Side.Black, kingbool=True) is []:
+                            score += 1100
                     else:
                         score -= score_dict[piece.material]
+                        if piece.material is Material.King and chessboard.legal_movescheck(Side.White, kingbool=True) is []:
+                            score -= 1100
         if chessboard.turn is Side.White:
             score = score + depth_left
         else:
@@ -631,9 +639,11 @@ class ChessGame:
 
             # Calculate the best possible move
             new_score, best_move = self.make_computer_move()
-            
-            print("Best move: " + best_move)
-            print("Score to achieve: " + str(new_score))
+            if best_move is None:
+                print("Stalemate reached")
+            else:
+                print("Best move: " + best_move)
+                print("Score to achieve: " + str(new_score))
             print("")
             self.make_human_move()
 

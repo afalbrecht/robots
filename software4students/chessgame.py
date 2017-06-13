@@ -296,7 +296,6 @@ class ChessBoard:
         for y_i in y_moves:
             if y_i not in dely:
                 moves.append(to_move((x, y), (x, y_i)))
-        print(moves)
         return moves
 
     # This function should return, given the current board configuration and
@@ -377,7 +376,7 @@ class ChessComputer:
     # TODO: write an implementation for this function
     @staticmethod
     def minimax(chessboard, depth, path=[]):
-        score = ChessComputer.evaluate_board(newboard, depth)
+        score = ChessComputer.evaluate_board(chessboard, depth)
         if depth == 0:
             return (score, path)
         movelist = ChessBoard.legal_moves(chessboard)
@@ -390,7 +389,7 @@ class ChessComputer:
                 if value > best_value:
                     best_value = value
                     best_path = deepcopy(path)
-            return (best_value, best_path[0])
+            return (best_value, best_path)
 
         else: #min
             best_value = math.inf
@@ -401,7 +400,7 @@ class ChessComputer:
                 if value < best_value:
                     best_value = value
                     best_path = deepcopy(path)
-            return (best_value, best_path[0])
+            return (best_value, best_path)
 
     # This function uses alphabeta to calculate the next move. Given the
     # chessboard and max depth, this function should return a tuple of the
@@ -459,8 +458,8 @@ class ChessGame:
     def make_computer_move(self):
         print("Calculating best move...")
         return ChessComputer.computer_move(self.chessboard,
-                self.depth, alphabeta=True)
-        
+                self.depth, alphabeta=False)
+
 
     def make_human_move(self):
         # Endlessly request input until the right input is specified

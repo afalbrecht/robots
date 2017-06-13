@@ -21,6 +21,7 @@ def apply_inverse_kinematics(x, y, z, gripper):
     '''
     # Implementation is based on the Robotics readers made by Leo.
     # TIP: If you want to know at all times, what the current x,y,z of your robot-arm is,
+    # print(get_gripper_bottom_position())
     # Read the other TIP at the bottom of the umi_simulation file.
     
     # Real arm runs from of 0 to 1.082
@@ -47,7 +48,7 @@ def board_position_to_cartesian(chessboard, position):
     '''
     # Get the local coordinates for the tiles on the board in the 0-7 range.
     (row, column) = to_coordinate(position)
-
+    world_coordinate_x = (row * chessboard.field_size) -
     # h8 is closes to the rotation point, row a[1-8] is furthest away from the robot arm.
 
     # ????? Perform the calculations, also take a rotation and translation of the chessboard in account!
@@ -56,6 +57,16 @@ def board_position_to_cartesian(chessboard, position):
     result = (world_coordinate_x, world_coordinate_y, world_coordinate_z)
 
     return result
+
+def find_piece_height(chessboard, position):
+    piece_name = chessboard.pieces[position][1]
+    if piece_name == "Pawn":
+        piece_height = 0.05
+    elif piece_name == "Rook":
+        piece_height = 0.06
+    elif piece_name == "King":
+        piece_height = 0.07
+    return piece_height/2
 
 def high_path(chessboard, from_pos, to_pos):
     '''
@@ -74,7 +85,7 @@ def high_path(chessboard, from_pos, to_pos):
     # Define half_piece height (you want to grab the middle of a piece, so get the height of the piece on a position.)
     # (*cough* this data might be stored in a chessboard *cough*)
     # You might need if statements around this, but you have to fill this variable regardlessly.
-    half_piece_height = 0 # ????
+    half_piece_height = find_piece_height(chessboard, from_pos) # ????  ##------------------------------------------------------------<---<--AANPASSEN------------------------------------------------------------------##
 
     # Get the coordinates.
     (from_x, from_y, from_z) = board_position_to_cartesian(chessboard, from_pos)

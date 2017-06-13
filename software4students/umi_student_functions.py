@@ -48,7 +48,7 @@ def board_position_to_cartesian(chessboard, position):
     '''
     # Get the local coordinates for the tiles on the board in the 0-7 range.
     (row, column) = to_coordinate(position)
-    world_coordinate_x = (row * chessboard.field_size) -
+    world_coordinate_x = (row * chessboard.field_size) - 0.5 * chessboard.
     # h8 is closes to the rotation point, row a[1-8] is furthest away from the robot arm.
 
     # ????? Perform the calculations, also take a rotation and translation of the chessboard in account!
